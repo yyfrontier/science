@@ -36,16 +36,16 @@
       <nav class="md:col-span-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
         <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 mb-2">Select Topic</h2>
         
-        <button onclick="selectTopic('Heat Energy & Thermal Conductors')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-sm">
+        <button onclick="selectTopic('Heat Energy & Thermal Conductors')" class="w-full text-left px-3 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-sm">
           🔥 Heat Energy
         </button>
-        <button onclick="selectTopic('Electrical Circuits (Series & Parallel)')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
+        <button onclick="selectTopic('Electrical Circuits (Series & Parallel)')" class="w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
           ⚡ Electrical Systems
         </button>
-        <button onclick="selectTopic('Human Digestive & Respiratory Systems')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
+        <button onclick="selectTopic('Human Digestive & Respiratory Systems')" class="w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
           🫁 Human Systems
         </button>
-        <button onclick="selectTopic('Plant Reproduction & Pollination')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
+        <button onclick="selectTopic('Plant Reproduction & Pollination')" class="w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
           🌱 Plant Reproduction
         </button>
       </nav>
@@ -97,7 +97,6 @@
     let currentTopic = "Heat Energy & Thermal Conductors";
     let currentQuestion = "";
 
-    // Load saved API key from local browser storage
     document.addEventListener("DOMContentLoaded", () => {
       const savedKey = localStorage.getItem("gemini_key");
       if (savedKey) document.getElementById("apiKey").value = savedKey;
@@ -105,6 +104,7 @@
 
     function saveKey() {
       const key = document.getElementById("apiKey").value.trim();
+      if(!key) return alert("Please paste an API key before saving.");
       localStorage.setItem("gemini_key", key);
       alert("API Key saved securely in your browser!");
     }
@@ -114,70 +114,75 @@
       document.getElementById("topicBadge").innerText = topicName;
     }
 
-    async function generateQuestion() {
+    async function callGemini(promptText) {
       const apiKey = localStorage.getItem("gemini_key") || document.getElementById("apiKey").value.trim();
-      if (!apiKey) return alert("Please enter and save your Gemini API Key first!");
+      if (!apiKey) throw new Error("NO_KEY");
 
+      // Uses fallback model list if primary endpoint is busy
+      const models = ["gemini-3.5-flash", "gemini-1.5-flash"];
+      
+      for (let model of models) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+          });
+          const data = await res.json();
+          if (data.candidates && data.candidates[0].content.parts[0].text) {
+            return data.candidates[0].content.parts[0].text;
+          }
+        } catch (e) {
+          console.warn(`Model ${model} failed, trying next...`);
+        }
+      }
+      throw new Error("API_FAIL");
+    }
+
+    async function generateQuestion() {
       const questionBox = document.getElementById("questionBox");
-      questionBox.innerHTML = "<span class='text-indigo-600 font-semibold animate-pulse'>Generating a Primary 5 Science question...</span>";
+      questionBox.innerHTML = "<span class='text-indigo-600 font-semibold animate-pulse'>Generating Primary 5 question via Gemini AI...</span>";
 
-      const prompt = `You are a Singapore Primary School Science Master Teacher. Generate one open-ended question (OEQ) for Primary 5 level on the topic: "${currentTopic}". 
-      Keep it scenario-based and concise (2-3 sentences max). Do not include the answer in your response.`;
+      const prompt = `You are a Singapore Primary School Science Master Teacher. Generate one open-ended question (OEQ) for Primary 5 level on the topic: "${currentTopic}". Keep it scenario-based and concise (2-3 sentences max). Do not include the answer in your response.`;
 
       try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        
-        const data = await response.json();
-        currentQuestion = data.candidates[0].content.parts[0].text;
+        currentQuestion = await callGemini(prompt);
         questionBox.innerText = currentQuestion;
         document.getElementById("feedback").classList.add("hidden");
       } catch (err) {
-        questionBox.innerText = "Error generating question. Please check your API key.";
+        if(err.message === "NO_KEY") {
+          questionBox.innerHTML = "<b class='text-red-600'>Please enter your Gemini API key in the top bar and click 'Save Key'!</b>";
+        } else {
+          questionBox.innerHTML = "<b class='text-red-600'>Error connecting to Gemini API. Please double check that your API Key is valid from Google AI Studio.</b>";
+        }
       }
     }
 
     async function markAnswerWithAI() {
-      const apiKey = localStorage.getItem("gemini_key") || document.getElementById("apiKey").value.trim();
       const studentAnswer = document.getElementById("answer").value.trim();
-      
-      if (!apiKey) return alert("Please save your Gemini API key first!");
       if (!studentAnswer) return alert("Please type an answer first!");
 
       const feedback = document.getElementById("feedback");
       feedback.classList.remove("hidden");
       feedback.className = "p-5 rounded-xl text-sm leading-relaxed space-y-3 bg-indigo-50 border border-indigo-200 text-indigo-950";
-      feedback.innerHTML = "<b>🤖 AI Marker is reviewing the answer...</b>";
+      feedback.innerHTML = "<b>🤖 AI Marker is evaluating the response...</b>";
 
       const prompt = `You are an MOE Singapore Primary School Science PSLE marker evaluating a Primary 5 student's answer.
-      
       Question: "${currentQuestion}"
       Student Answer: "${studentAnswer}"
 
-      Evaluate the answer based on Singapore Primary Science scoring criteria (Claim, Evidence, Scientific Reasoning, required keywords).
-      
-      Structure your response in clear HTML:
+      Evaluate based on Singapore Primary Science criteria (Claim, Evidence, Reasoning, keywords).
+      Output clear HTML formatting:
       1. <b>Score:</b> [Award 0, 1, or 2 marks out of 2]
-      2. <b>What was done well:</b> (1 short sentence)
-      3. <b>Missing Keywords or Concepts:</b> (Bulleted list if any)
-      4. <b>Model PSLE Answer:</b> (Show the ideal answer with keywords underlined)`;
+      2. <b>What was done well:</b> (1 sentence)
+      3. <b>Missing Keywords or Concepts:</b> (Bulleted list)
+      4. <b>Model PSLE Answer:</b> (Ideal answer with key phrases underlined)`;
 
       try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        
-        const data = await response.json();
-        const aiResponse = data.candidates[0].content.parts[0].text;
-        
-        feedback.innerHTML = aiResponse.replace(/```html|```/g, '');
+        const text = await callGemini(prompt);
+        feedback.innerHTML = text.replace(/```html|```/g, '');
       } catch (err) {
-        feedback.innerHTML = "Error marking answer. Please check network connection or API Key.";
+        feedback.innerHTML = "<b class='text-red-600'>Failed to mark answer. Check your API key.</b>";
       }
     }
   </script>
