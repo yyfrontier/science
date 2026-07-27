@@ -3,117 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yangyang's P5 Science Explorer</title>
+  <title>Yangyang's AI Science Tutor</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 font-sans">
 
-  <!-- Main Container -->
   <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
     
     <!-- Top Header -->
     <header class="bg-indigo-600 text-white p-6 rounded-3xl shadow-md flex justify-between items-center">
       <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">🧪 Yangyang's Science Explorer</h1>
-        <p class="text-indigo-200 text-sm mt-1">Singapore Primary 5 • Open-Ended Answering Mastery</p>
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">🧪 Yangyang's AI Science Hub</h1>
+        <p class="text-indigo-200 text-sm mt-1">Singapore Primary 5 • Powered by Gemini AI</p>
       </div>
       <span class="bg-indigo-500 text-indigo-100 text-xs font-bold px-3 py-1.5 rounded-full border border-indigo-400">P5 Science</span>
     </header>
 
-    <!-- Content Layout with Topic Bar & Question Area -->
+    <!-- API Key Configuration Box -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center gap-3">
+      <span class="text-sm font-semibold text-slate-700 whitespace-nowrap">🔑 Gemini API Key:</span>
+      <input type="password" id="apiKey" placeholder="Paste your AI Studio Key here..." 
+        class="w-full p-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+      <button onclick="saveKey()" class="px-4 py-2 bg-slate-800 text-white font-semibold text-sm rounded-xl hover:bg-slate-900 transition">
+        Save Key
+      </button>
+    </div>
+
+    <!-- Main Section -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
       
-      <!-- Topic Navigation Menu -->
+      <!-- Topic Selection Sidebar -->
       <nav class="md:col-span-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
-        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">P5 Themes</h2>
-        <button class="w-full text-left px-3 py-2 rounded-xl bg-amber-50 text-amber-700 font-bold border border-amber-200 text-sm">
-          🔥 Heat & Energy
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 mb-2">Select Topic</h2>
+        
+        <button onclick="selectTopic('Heat Energy & Thermal Conductors')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 text-sm">
+          🔥 Heat Energy
         </button>
-        <button class="w-full text-left px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
+        <button onclick="selectTopic('Electrical Circuits (Series & Parallel)')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
           ⚡ Electrical Systems
         </button>
-        <button class="w-full text-left px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
+        <button onclick="selectTopic('Human Digestive & Respiratory Systems')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
           🫁 Human Systems
         </button>
-        <button class="w-full text-left px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
+        <button onclick="selectTopic('Plant Reproduction & Pollination')" class="topic-btn w-full text-left px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm transition">
           🌱 Plant Reproduction
         </button>
       </nav>
 
-      <!-- Main Practice Area -->
+      <!-- Practice Box -->
       <main class="md:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
         
-        <!-- Question Badge -->
         <div class="flex items-center justify-between">
-          <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
-            Energy • Heat Conductors
+          <span id="topicBadge" class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
+            Heat Energy & Thermal Conductors
           </span>
-          <span class="text-xs text-slate-400 font-medium">Question 1 of 5</span>
+          <button onclick="generateQuestion()" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 rounded-xl text-xs font-bold transition">
+            ✨ Generate New Question
+          </button>
         </div>
 
-        <!-- Question Prompt -->
+        <!-- Question Text -->
         <div class="space-y-2">
-          <h2 class="text-xl font-bold text-slate-900">Iron Spoon vs Wooden Spoon</h2>
-          <p class="text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
-            An iron spoon and a wooden spoon are placed into a mug of hot soup (80°C). 
-            After 3 minutes, why does the iron spoon feel hotter to touch than the wooden spoon?
-          </p>
+          <h2 class="text-xl font-bold text-slate-900">Practice Question</h2>
+          <div id="questionBox" class="text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 min-h-[80px]">
+            Click <b>"Generate New Question"</b> to create a custom P5 Science question using Gemini AI!
+          </div>
         </div>
 
-        <!-- CER Answering Framework -->
+        <!-- Student Answer Input -->
         <div class="space-y-3">
           <label for="answer" class="block text-sm font-semibold text-slate-700">
-            Write your answer below (Remember: Compare both objects!):
+            Yangyang's Answer (Claim - Evidence - Reasoning):
           </label>
           <textarea id="answer" rows="4" 
-            class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm" 
-            placeholder="E.g., Iron is a better conductor of heat than wood, so it gains heat faster from the hot soup..."></textarea>
+            class="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm" 
+            placeholder="Type your complete answer here..."></textarea>
         </div>
 
-        <!-- Submit Button -->
-        <button onclick="checkAnswer()" 
+        <!-- Marking Button -->
+        <button onclick="markAnswerWithAI()" 
           class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold transition shadow-sm">
-          Check Key P5 Science Phrases
+          🤖 Mark Answer with AI Tutor
         </button>
 
-        <!-- Feedback Result Box -->
-        <div id="feedback" class="hidden p-4 rounded-xl text-sm leading-relaxed space-y-2"></div>
+        <!-- AI Feedback -->
+        <div id="feedback" class="hidden p-5 rounded-xl text-sm leading-relaxed space-y-3"></div>
 
       </main>
     </div>
   </div>
 
   <script>
-    function checkAnswer() {
-      const input = document.getElementById('answer').value.toLowerCase();
-      const feedback = document.getElementById('feedback');
+    let currentTopic = "Heat Energy & Thermal Conductors";
+    let currentQuestion = "";
 
-      // Key MOE primary school evaluation requirements for heat comparison
-      const checks = [
-        { key: 'better', label: 'Comparative phrase (e.g., "better conductor" or "faster")' },
-        { key: 'conductor', label: 'Conductor of heat' },
-        { key: 'gained', label: 'Gained heat (Heat flow direction)' }
-      ];
+    // Load saved API key from local browser storage
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedKey = localStorage.getItem("gemini_key");
+      if (savedKey) document.getElementById("apiKey").value = savedKey;
+    });
 
-      let missing = checks.filter(c => !input.includes(c.key)).map(c => c.label);
+    function saveKey() {
+      const key = document.getElementById("apiKey").value.trim();
+      localStorage.setItem("gemini_key", key);
+      alert("API Key saved securely in your browser!");
+    }
 
-      feedback.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-900', 'border-emerald-200', 'bg-amber-50', 'text-amber-900', 'border-amber-200');
+    function selectTopic(topicName) {
+      currentTopic = topicName;
+      document.getElementById("topicBadge").innerText = topicName;
+    }
 
-      if (missing.length === 0) {
-        feedback.classList.add('bg-emerald-50', 'text-emerald-900', 'border', 'border-emerald-200');
-        feedback.innerHTML = `
-          <p class="font-bold text-base">🎉 Excellent comparative answer!</p>
-          <p class="text-xs">You successfully compared heat conductivity and heat gain rate using proper Singapore Science terms.</p>
-        `;
-      } else {
-        feedback.classList.add('bg-amber-50', 'text-amber-900', 'border', 'border-amber-200');
-        feedback.innerHTML = `
-          <p class="font-bold">💡 Good attempt! Remember these P5 Science answering tips:</p>
-          <ul class="list-disc list-inside text-xs space-y-1 mt-1">
-            ${missing.map(m => `<li>Missing concept/word: <b>${m}</b></li>`).join('')}
-          </ul>
-          <p class="text-xs mt-2 text-amber-700"><b>Sample Complete Answer:</b> Iron is a <u>better conductor of heat</u> than wood, so it <u>gained heat faster</u> from the hot soup.</p>
-        `;
+    async function generateQuestion() {
+      const apiKey = localStorage.getItem("gemini_key") || document.getElementById("apiKey").value.trim();
+      if (!apiKey) return alert("Please enter and save your Gemini API Key first!");
+
+      const questionBox = document.getElementById("questionBox");
+      questionBox.innerHTML = "<span class='text-indigo-600 font-semibold animate-pulse'>Generating a Primary 5 Science question...</span>";
+
+      const prompt = `You are a Singapore Primary School Science Master Teacher. Generate one open-ended question (OEQ) for Primary 5 level on the topic: "${currentTopic}". 
+      Keep it scenario-based and concise (2-3 sentences max). Do not include the answer in your response.`;
+
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        
+        const data = await response.json();
+        currentQuestion = data.candidates[0].content.parts[0].text;
+        questionBox.innerText = currentQuestion;
+        document.getElementById("feedback").classList.add("hidden");
+      } catch (err) {
+        questionBox.innerText = "Error generating question. Please check your API key.";
+      }
+    }
+
+    async function markAnswerWithAI() {
+      const apiKey = localStorage.getItem("gemini_key") || document.getElementById("apiKey").value.trim();
+      const studentAnswer = document.getElementById("answer").value.trim();
+      
+      if (!apiKey) return alert("Please save your Gemini API key first!");
+      if (!studentAnswer) return alert("Please type an answer first!");
+
+      const feedback = document.getElementById("feedback");
+      feedback.classList.remove("hidden");
+      feedback.className = "p-5 rounded-xl text-sm leading-relaxed space-y-3 bg-indigo-50 border border-indigo-200 text-indigo-950";
+      feedback.innerHTML = "<b>🤖 AI Marker is reviewing the answer...</b>";
+
+      const prompt = `You are an MOE Singapore Primary School Science PSLE marker evaluating a Primary 5 student's answer.
+      
+      Question: "${currentQuestion}"
+      Student Answer: "${studentAnswer}"
+
+      Evaluate the answer based on Singapore Primary Science scoring criteria (Claim, Evidence, Scientific Reasoning, required keywords).
+      
+      Structure your response in clear HTML:
+      1. <b>Score:</b> [Award 0, 1, or 2 marks out of 2]
+      2. <b>What was done well:</b> (1 short sentence)
+      3. <b>Missing Keywords or Concepts:</b> (Bulleted list if any)
+      4. <b>Model PSLE Answer:</b> (Show the ideal answer with keywords underlined)`;
+
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        
+        const data = await response.json();
+        const aiResponse = data.candidates[0].content.parts[0].text;
+        
+        feedback.innerHTML = aiResponse.replace(/```html|```/g, '');
+      } catch (err) {
+        feedback.innerHTML = "Error marking answer. Please check network connection or API Key.";
       }
     }
   </script>
